@@ -1,26 +1,52 @@
 /**
- * Uma solução simples para o problema das cargas usando o algoritmo
+ * Uma solução para o problema do labirinto usando o algoritmo
  * de tempera simulada. 
  * 
- * @author Igor Sgorla Brehm
+ * @author Igor Sgorla Brehm, Alexandre Bing e Vinicius Parmeggiani
  */
 import java.util.Random;
-public class Work_Hours_Problem {
-    public int[] work_hours;
-    public int total_tasks;
-    public String result1 = "";
-    public String result2 = ""; 
+import java.util.Scanner;
+import java.io.*;
+
+public class Labyrinth_Problem {
+    private String[][] labyrinth;
     
     // Inicializador do objeto
-    public Work_Hours_Problem(){
-        this.work_hours = new int[]{10,5,5,20,5,15,1,3,4,18,2,16,9,3,3,2,1,7,1,2};
-        this.total_tasks = this.work_hours.length;
-        System.out.println("Iniciada a resolucao...");
+    public Labyrinth_Problem() throws FileNotFoundException{
+        File file = new File(System.getProperty("user.dir")+"/lab_exemplo1.txt");
+        Scanner in = new Scanner(file);
+        int dimension = in.nextInt();
+        this.labyrinth = new String[dimension][dimension];
+        System.out.print(" ");
+        for(int i = 0; i < dimension-1; i++){
+            System.out.print("___");
+        }
+        System.out.print("_");
+        System.out.println("");
+        for(int i = 0; i < dimension; i++){
+            System.out.print("|");
+            for(int j = 0; j < dimension; j++){
+                labyrinth[i][j] = in.next();
+                if(j == dimension - 1){
+                    System.out.print(" "+labyrinth[i][j]);
+                }
+                else if(j == 0){
+                    System.out.print(labyrinth[i][j]+" ");
+                }
+                else{
+                    System.out.print(" "+labyrinth[i][j]+" ");    
+                }
+            }
+            System.out.print("|");
+            System.out.println("");
+        }
         simulated_Annealing();
     }
     
     // Este metodo compara a diferenca de horas a serem trabalhadas entre as duas pessoas
     public int evaluated_Distribution(int[] vector){
+        return 0;
+        /*
         int p1 = 0; 
         int p2 = 0;
         for(int i = 0; i < total_tasks/2; i++) {
@@ -38,10 +64,13 @@ public class Work_Hours_Problem {
         else{
             return p1 - p2;
         }    
+        */
     }
     
     // Este metodo tenta encontrar uma distribuicao melhor de horas entre as duas pessoas
     public void find_Successor(double T){
+        return;
+        /*
         Random index = new Random();
         int j = 0;
         int i = 0;
@@ -67,10 +96,13 @@ public class Work_Hours_Problem {
         else{
             return;
         }
+        */
     }
     
     // Metodo que simula o algoritmo de tempera simulada
     public void simulated_Annealing(){
+        return;
+        /*
         double T = 300;
         for(int t = 1; t < 10000; t++){  
             find_Successor(T);
@@ -79,48 +111,12 @@ public class Work_Hours_Problem {
             }    
             T = T*0.99;
         }
-        result1 = toString(true);
-        result2 = toString(false);
+        */
     }
     
-    // Metodo padrao de transformacao do output da solucao...
-    // Para uso na execucao da solucao em um terminal.
-    public String toString(boolean p1){
-        String exit_text = "";
-        if(p1 == true){
-            for(int i = 0; i < total_tasks/2; i++){
-                exit_text = exit_text + work_hours[i]+" |";
-            }
-            return exit_text;
-        }
-        else{
-            for(int i = total_tasks/2; i < total_tasks; i++){
-                exit_text = exit_text + work_hours[i]+" |";
-            }
-            return exit_text;    
-        }
-        
-    }
-    
-    // Getter simples do String resultado do problema
-    public String getResult(boolean p1){
-        if(p1 == true){
-            return this.result1;
-        }
-        else{
-            return this.result2; 
-        }    
-    }  
-    
-    public int getFinalDiff(){
-        return this.evaluated_Distribution(work_hours);
-    }    
     
     // Metodo Main da solucao
-    public static void main(String args[]){
-       Work_Hours_Problem problem = new Work_Hours_Problem();
-       System.out.println("Ordenacao final P1: "+ problem.getResult(true));
-       System.out.println("Ordenacao final P2: "+ problem.getResult(false));
-       System.out.println("Diferenca entre pessoas final: "+ problem.getFinalDiff());
+    public static void main(String args[]) throws FileNotFoundException{
+       Labyrinth_Problem problem = new Labyrinth_Problem();
     }
 }
