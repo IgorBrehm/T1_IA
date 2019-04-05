@@ -10,64 +10,72 @@ import java.io.*;
 
 public class Labyrinth_Problem {
     private String[][] labyrinth;
+    private int dimension;
+    private String[] best_path;
     
     // Inicializador do objeto
     public Labyrinth_Problem() throws FileNotFoundException{
         File file = new File(System.getProperty("user.dir")+"/lab_exemplo1.txt");
         Scanner in = new Scanner(file);
-        int dimension = in.nextInt();
+        best_path = new String[]{"N","N","N","N","N","N","N","N","N","N"};
+        this.dimension = in.nextInt();
         this.labyrinth = new String[dimension][dimension];
-        System.out.print(" ");
-        for(int i = 0; i < dimension-1; i++){
-            System.out.print("___");
-        }
-        System.out.print("_");
-        System.out.println("");
         for(int i = 0; i < dimension; i++){
-            System.out.print("|");
             for(int j = 0; j < dimension; j++){
                 labyrinth[i][j] = in.next();
-                if(j == dimension - 1){
-                    System.out.print(" "+labyrinth[i][j]);
-                }
-                else if(j == 0){
-                    System.out.print(labyrinth[i][j]+" ");
-                }
-                else{
-                    System.out.print(" "+labyrinth[i][j]+" ");    
-                }
             }
-            System.out.print("|");
-            System.out.println("");
         }
+        print_Labyrinth();
         simulated_Annealing();
     }
     
-    // Este metodo compara a diferenca de horas a serem trabalhadas entre as duas pessoas
-    public int evaluated_Distribution(int[] vector){
-        return 0;
-        /*
-        int p1 = 0; 
-        int p2 = 0;
-        for(int i = 0; i < total_tasks/2; i++) {
-            p1 = p1 + vector[i];
+    // Este metodo calcula o quao boa e a sequencia de direcoes sendo avaliada
+    /*
+     * Score: 
+     * 1. Quantos passos da sem bater em nada: Cada passo aumenta score em 5% do total de posicoes do labirinto
+     * 2. Penalizar movimentos em 'circulo': Cada comportamento circular detectado penaliza em 10% do total de posicoes do labirinto
+     * 3. Chega na saida? Ganha muito score: automaticamente recebe 80% do total de posicoes no score (sem levar em conta bonus e penalidades).
+     */
+    public int evaluated_Distribution(int[] path){
+        int score = 0;
+        int percent = Math.round((1/dimension)*100); 
+        for(int i = 0; i < dimension; i++){
+            for(int j = 0; j < dimension; j++){
+                /*
+                if(){ // 1
+                    score = score + (percent * 5);        
+                }
+                else if(){ // 2
+                    
+                }
+                else if(){ // 3
+                    
+                }
+                else{
+                    continue;    
+                }
+                */
+            }
         }
-        for(int i = total_tasks/2; i < total_tasks; i++) {
-            p2 = p2 + vector[i];
-        }
-        if(p1 < p2){
-            return p2 - p1;
-        }
-        else if(p1 > p2){
-            return p1 - p2;
-        }
-        else{
-            return p1 - p2;
-        }    
-        */
+        System.out.println("Score: "+ score);
+        return score;
     }
     
-    // Este metodo tenta encontrar uma distribuicao melhor de horas entre as duas pessoas
+    // Este metodo tenta encontrar um estado vizinho (combinacao de direcoes com apenas 2 direcoes de diferenca do estado atual)
+    // que seja melhor que o estado atual.
+    /*
+     * Direcoes possiveis:
+     * 1. L -> Esquerda
+     * 2. R -> Direita
+     * 3. U -> Cima
+     * 4. D -> Baixo
+     * 
+     * Tipos de posicoes no labirinto:
+     * 1. E -> Entrada
+     * 2. S -> Saida
+     * 3. 0 -> Passagem
+     * 4. 1 -> Parede
+     */
     public void find_Successor(double T){
         return;
         /*
@@ -114,6 +122,41 @@ public class Labyrinth_Problem {
         */
     }
     
+    //Metodo para escrever na tela o labirinto atual
+    public void print_Labyrinth(){
+        System.out.print(" ");
+        for(int i = 0; i < dimension-1; i++){
+            System.out.print("___");
+        }
+        System.out.print("_");
+        System.out.println("");
+        for(int i = 0; i < dimension; i++){
+            System.out.print("|");
+            for(int j = 0; j < dimension; j++){
+                if(j == dimension - 1){
+                    System.out.print(" "+labyrinth[i][j]);
+                }
+                else if(j == 0){
+                    System.out.print(labyrinth[i][j]+" ");
+                }
+                else{
+                    System.out.print(" "+labyrinth[i][j]+" ");    
+                }
+            }
+            System.out.print("|");
+            System.out.println("");
+        }
+        System.out.println("");
+    }
+    
+    //Metodo para escrever na tela uma sequencia de direcoes dentro do labirinto
+    public void print_Path(String[] path){
+        for(int i = 0; i < path.length-1; i++){
+            System.out.print(path[i]+" -> ");    
+        }
+        System.out.print(path[path.length-1]);
+        System.out.println("\n");
+    }
     
     // Metodo Main da solucao
     public static void main(String args[]) throws FileNotFoundException{
