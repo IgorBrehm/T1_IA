@@ -54,13 +54,13 @@ public class Labyrinth_Problem {
     // Este metodo calcula o quao boa e a sequencia de direcoes sendo avaliada
     /*
      * Score: 
-     * 1. Quantos passos da sem bater em nada: Cada passo aumenta score em 5% do total de posicoes do labirinto
+     * 1. Quantos passos da sem bater em nada: Cada passo aumenta score em 1% do total de posicoes do labirinto
      * 2. Penalizar movimentos em 'circulo': Cada comportamento circular detectado penaliza em 10% do total de posicoes do labirinto
      * 3. Chega na saida? Ganha muito score: automaticamente recebe 80% do total de posicoes no score (sem levar em conta bonus e penalidades).
      */
-    private int evaluated_Distribution(String[] path){
-        int score = 0;
-        int percent = Math.round((1/dimension)*100);
+    private long evaluated_Distribution(String[] path){
+        long score = 0;
+        long percent = (1/100)*dimension;
         int current_x = 0;
         int current_y = 0;
         for(int k = 0; k < path.length; k++){
@@ -72,10 +72,14 @@ public class Labyrinth_Problem {
                 break; //bateu
             }
             else if(feedback[0] == 1){ // 1
-                score = score + (percent * 5);
-            }
-            else if (feedback[0] == 2){ // 2
-                score = score - (percent * 10);
+                //detectar circulos aqui
+                if(detect_circle(path,k) == true){
+                    score = score - (percent*10);
+                    score = score + percent;
+                }
+                else{
+                    score = score + percent; 
+                }
             }
             else{ // 3
                 score = score + (percent * 80);
@@ -86,84 +90,156 @@ public class Labyrinth_Problem {
         return score;
     }
     
+    // Metodo que realiza o movimento atual dentro do labirinto
     private int[] move(String movement, int position_x, int position_y){
-        int[] exit_status = new int[3];
-        int x;
-        int y;
+        int[] exit_status;
+        int x = position_x;
+        int y = position_y;
         if(movement.equals("L")){ // Left
-            // checar se sai fora do labirinto com o movimento
-            // se nao sair, checar se a posicao tem o que escrito
-            if(labyrinth[position_x][position_y].equals("0") || labyrinth[position_x][position_y].equals("E")){ // 1
-                exit_status = {1,x,y};
-                return exit_status;    
-            }
-            else if(){ // 2
-                exit_status = {2,x,y};
-                return exit_status;
-            }
-            else if(){ // 3
-                exit_status = {3,x,y};
+            boolean valid = check_move_validity("L",position_x,position_y);
+            if(valid == false){ // bateu
+                exit_status = new int[]{0,x,y};
                 return exit_status;
             }
             else{
-                exit_status = {0,x,y};
-                return exit_status;
+                if(labyrinth[position_x-1][position_y].equals("0")
+                || labyrinth[position_x-1][position_y].equals("E")){ // valido
+                    x = position_x - 1;
+                    y = position_y;
+                    exit_status = new int[]{1,x,y};
+                    return exit_status;    
+                }
+                else if(labyrinth[position_x-1][position_y].equals("S")){ // chegou na saida!
+                    x = position_x - 1;
+                    y = position_y;
+                    exit_status = new int[]{3,x,y};
+                    return exit_status;
+                }
+                else{ // bateu
+                    exit_status = new int[]{0,x,y};
+                    return exit_status;
+                }
             }
         }
         else if(movement.equals("R")){ // Right
-            if(labyrinth[position_x][position_y].equals("0") || labyrinth[position_x][position_y].equals("E")){ // 1
-                exit_status = {1,x,y};
-                return exit_status;    
-            }
-            else if(){ // 2
-                exit_status = {2,x,y};
-                return exit_status;
-            }
-            else if(){ // 3
-                exit_status = {3,x,y};
+            boolean valid = check_move_validity("R",position_x,position_y);
+            if(valid == false){ // bateu
+                exit_status = new int[]{0,x,y};
                 return exit_status;
             }
             else{
-                exit_status = {0,x,y};
-                return exit_status;
+                if(labyrinth[position_x+1][position_y].equals("0")
+                || labyrinth[position_x+1][position_y].equals("E")){ // valido
+                    x = position_x + 1;
+                    y = position_y;
+                    exit_status = new int[]{1,x,y};
+                    return exit_status;    
+                }
+                else if(labyrinth[position_x+1][position_y].equals("S")){ // chegou na saida!
+                    x = position_x + 1;
+                    y = position_y;
+                    exit_status = new int[]{3,x,y};
+                    return exit_status;
+                }
+                else{ // bateu
+                    exit_status = new int[]{0,x,y};
+                    return exit_status;
+                }
             }
         }
         else if(movement.equals("U")){ // Up
-            if(labyrinth[position_x][position_y].equals("0") || labyrinth[position_x][position_y].equals("E")){ // 1
-                exit_status = {1,x,y};
-                return exit_status;    
-            }
-            else if(){ // 2
-                exit_status = {2,x,y};
-                return exit_status;
-            }
-            else if(){ // 3
-                exit_status = {3,x,y};
+            boolean valid = check_move_validity("U",position_x,position_y);
+            if(valid == false){ // bateu
+                exit_status = new int[]{0,x,y};
                 return exit_status;
             }
             else{
-                exit_status = {0,x,y};
-                return exit_status;
+                if(labyrinth[position_x][position_y-1].equals("0")
+                || labyrinth[position_x][position_y-1].equals("E")){ // valido
+                    x = position_x;
+                    y = position_y-1;
+                    exit_status = new int[]{1,x,y};
+                    return exit_status;    
+                }
+                else if(labyrinth[position_x][position_y-1].equals("S")){ // chegou na saida!
+                    x = position_x;
+                    y = position_y-1;
+                    exit_status = new int[]{3,x,y};
+                    return exit_status;
+                }
+                else{ // bateu
+                    exit_status = new int[]{0,x,y};
+                    return exit_status;
+                }
             }
         }
-        else(D){ // Down
-            if(labyrinth[position_x][position_y].equals("0") || labyrinth[position_x][position_y].equals("E")){ // 1
-                exit_status = {1,x,y};
-                return exit_status;    
-            }
-            else if(){ // 2
-                exit_status = {2,x,y};
-                return exit_status;
-            }
-            else if(){ // 3
-                exit_status = {3,x,y};
+        else{ // Down
+            boolean valid = check_move_validity("D",position_x,position_y);
+            if(valid == false){ // bateu
+                exit_status = new int[]{0,x,y};
                 return exit_status;
             }
             else{
-                exit_status = {0,x,y};
-                return exit_status;
+                if(labyrinth[position_x][position_y+1].equals("0")
+                || labyrinth[position_x][position_y+1].equals("E")){ // valido
+                    x = position_x;
+                    y = position_y+1;
+                    exit_status = new int[]{1,x,y};
+                    return exit_status;    
+                }
+                else if(labyrinth[position_x][position_y+1].equals("S")){ // chegou na saida!
+                    x = position_x;
+                    y = position_y+1;
+                    exit_status = new int[]{3,x,y};
+                    return exit_status;
+                }
+                else{ // bateu
+                    exit_status = new int[]{0,x,y};
+                    return exit_status;
+                }
             }
         }
+    }
+    
+    
+    // Metodo que verifica a validade do movimento, isto e, se nao vai sair fora do labirinto
+    private boolean check_move_validity(String move,int pos_x,int pos_y){
+        if(move.equals("L")){ //Left
+            if(pos_x == 0){
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+        else if(move.equals("R")){ //Right
+            if(pos_x == dimension-1){
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+        else if(move.equals("U")){ //Up
+            if(pos_y == 0){
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+        else{ //Down
+            if(pos_y == dimension-1){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+    }
+    //TODO implementar detector de movimento em circulo
+    private boolean detect_circle(String[] path, int moves){
+        return false;
     }
     
     // Este metodo tenta encontrar um estado vizinho (combinacao de direcoes com apenas 2 direcoes de diferenca do estado atual)
@@ -217,7 +293,7 @@ public class Labyrinth_Problem {
         double T = 300;
         for(int t = 1; t < 10000; t++){  
             find_Successor(T);
-            if(evaluated_Distribution(work_hours) >= (dimension * dimension)){
+            if(evaluated_Distribution(best_path) >= (dimension * dimension)){
                 break;
             }    
             T = T*0.99;
