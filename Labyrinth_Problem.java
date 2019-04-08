@@ -18,12 +18,12 @@ public class Labyrinth_Problem {
     
     // Inicializador do objeto
     public Labyrinth_Problem() throws FileNotFoundException{
-        File file = new File(System.getProperty("user.dir")+"/lab_exemplo1.txt");
+        File file = new File(System.getProperty("user.dir")+"/lab_exemplo2.txt");
         Scanner in = new Scanner(file);
         this.dimension = in.nextInt();
         this.trouble_index = 0;
         this.best_path = new String[dimension*dimension];
-        this.best_path = initialize_path(best_path,true);
+        this.best_path = initialize_path(best_path,"start");
         this.labyrinth = new String[dimension][dimension];
         this.backup_labyrinth = new String[dimension][dimension];
         for(int i = 0; i < dimension; i++){
@@ -40,14 +40,34 @@ public class Labyrinth_Problem {
     }
     
     // Metodo que inicializa os valores do vetor de direcoes
-    private String[] initialize_path(String[] path, boolean start){
+    private String[] initialize_path(String[] path, String command){
         Random random = new Random();
         int j = 0;
-        if(start == false){ // candidate
+        if(command.equals("improve")){ // candidate
             for(int i = 0; i < trouble_index; i++){
                 path[i] = best_path[i];
             }
             for(int i = trouble_index; i < path.length; i++){
+                j = random.nextInt(4);
+                if(j == 1){ // 1
+                    path[i] = "L";
+                }
+                else if(j == 2){ // 2
+                    path[i] = "R";
+                }
+                else if(j == 3){ // 3
+                    path[i] = "U";
+                }
+                else{ // 4
+                    path[i] = "D";
+                }
+            }
+        }
+        else if(command.equals("cut")){
+            for(int i = 0; i < path.length/2; i++){
+                path[i] = best_path[i];
+            }
+            for(int i = path.length/2; i < path.length; i++){
                 j = random.nextInt(4);
                 if(j == 1){ // 1
                     path[i] = "L";
@@ -332,11 +352,11 @@ public class Labyrinth_Problem {
         Random index = new Random();
         String aux = "";
         String[] candidate = new String[dimension*dimension];
-        candidate = initialize_path(candidate,false);
+        candidate = initialize_path(candidate,"improve");
         int next = evaluate_Path(candidate,"Candidate");
         print_Labyrinth();
         reset_Labyrinth();
-        int random_dropout = index.nextInt(1000)-T;
+        int random_dropout = index.nextInt(5000)-T;
         if(best_score < next){
             best_path = candidate;
             best_score = evaluate_Path(best_path,"Best Path");
@@ -344,7 +364,7 @@ public class Labyrinth_Problem {
         }
         else if(random_dropout <= 0) {
             System.out.println("RANDOM DROPOUT! ");
-            best_path = candidate;
+            best_path = initialize_path(best_path,"cut");
             best_score = evaluate_Path(best_path,"Best Path");
             return;
         }
@@ -355,7 +375,7 @@ public class Labyrinth_Problem {
     
     // Metodo que simula o algoritmo de tempera simulada
     public void simulated_Annealing() throws FileNotFoundException{
-        int T = 500;
+        int T = 5000;
         for(int t = 1; t < 10000; t++){
             find_Successor(T);
             if(best_score >= (dimension * dimension)){
@@ -373,7 +393,7 @@ public class Labyrinth_Problem {
     
     // Reseta o labirinto
     private void reset_Labyrinth() throws FileNotFoundException{
-        File file = new File(System.getProperty("user.dir")+"/lab_exemplo1.txt");
+        File file = new File(System.getProperty("user.dir")+"/lab_exemplo2.txt");
         Scanner in = new Scanner(file);
         dimension = in.nextInt();
         labyrinth = new String[dimension][dimension];
