@@ -10,23 +10,28 @@ import java.io.*;
 
 public class Labyrinth_Problem {
     private String[][] labyrinth;
+    private String[][] backup_labyrinth;
     private int dimension;
     private String[] best_path;
     private int best_score;
+    private int trouble_index;
     
     // Inicializador do objeto
     public Labyrinth_Problem() throws FileNotFoundException{
         File file = new File(System.getProperty("user.dir")+"/lab_exemplo1.txt");
         Scanner in = new Scanner(file);
         this.dimension = in.nextInt();
+        this.trouble_index = 0;
         this.best_path = new String[dimension*dimension];
-        this.best_path = initialize_path(best_path);
+        this.best_path = initialize_path(best_path,true);
         this.labyrinth = new String[dimension][dimension];
+        this.backup_labyrinth = new String[dimension][dimension];
         for(int i = 0; i < dimension; i++){
             for(int j = 0; j < dimension; j++){
                 labyrinth[i][j] = in.next();
             }
         }
+        in.close();
         this.best_score = evaluate_Path(best_path,"Best Path");
         System.out.println("Iniciada a execucao do algoritmo...\n");
         System.out.println("Labirinto a ser resolvido:");
@@ -34,22 +39,45 @@ public class Labyrinth_Problem {
         simulated_Annealing();
     }
     
-    private String[] initialize_path(String[] path){
+    // Metodo que inicializa os valores do vetor de direcoes
+    private String[] initialize_path(String[] path, boolean start){
         Random random = new Random();
         int j = 0;
-        for(int i = 0; i < path.length; i++){
-            j = random.nextInt(4);
-            if(j == 1){ // 1
-                path[i] = "L";
+        if(start == false){ // candidate
+            for(int i = 0; i < trouble_index; i++){
+                path[i] = best_path[i];
             }
-            else if(j == 2){ // 2
-                path[i] = "R";
+            for(int i = trouble_index; i < path.length; i++){
+                j = random.nextInt(4);
+                if(j == 1){ // 1
+                    path[i] = "L";
+                }
+                else if(j == 2){ // 2
+                    path[i] = "R";
+                }
+                else if(j == 3){ // 3
+                    path[i] = "U";
+                }
+                else{ // 4
+                    path[i] = "D";
+                }
             }
-            else if(j == 3){ // 3
-                path[i] = "U";
-            }
-            else{ // 4
-                path[i] = "D";
+        }
+        else{
+            for(int i = 0; i < path.length; i++){
+                j = random.nextInt(4);
+                if(j == 1){ // 1
+                    path[i] = "L";
+                }
+                else if(j == 2){ // 2
+                    path[i] = "R";
+                }
+                else if(j == 3){ // 3
+                    path[i] = "U";
+                }
+                else{ // 4
+                    path[i] = "D";
+                }
             }
         }
         return path;
@@ -77,10 +105,13 @@ public class Labyrinth_Problem {
             current_y = feedback[2];
             if(feedback[0] == 0){
                 System.out.println("BATEU!");
+                if(name.equals("Best Path")){
+                    trouble_index = k;
+                }
                 break; // 0 bateu na parede
             }
             else if(feedback[0] == 1){
-                if(detect_circle(path,k) == true){ // 2 movimento em circulo
+                if(detect_circle(path,k,current_x,current_y) == true){ // 2 movimento em circulo
                     score = score - 3;
                     score = score + 1;
                     System.out.println("ANDOU EM CIRCULO!");
@@ -93,6 +124,10 @@ public class Labyrinth_Problem {
             else{ // 3 chegou na saida
                 System.out.println("CHEGOU NA SAIDA!");
                 score = score + (dimension*dimension);
+                // *********************************************************************
+                // TODO: agora que chegamos na saida, o score deve funcionar diferente
+                // ja que agora queremos encontrar o menor caminho ate a saida
+                // *********************************************************************
                 break;
             }
         }
@@ -104,7 +139,7 @@ public class Labyrinth_Problem {
         int[] exit_status;
         int x = position_x;
         int y = position_y;
-        if(movement.equals("U")){ // Left
+        if(movement.equals("U")){
             boolean valid = check_move_validity("U",position_x,position_y);
             if(valid == false){ // 0 bateu
                 exit_status = new int[]{0,x,y};
@@ -112,12 +147,14 @@ public class Labyrinth_Problem {
             }
             else{
                 if(labyrinth[position_x-1][position_y].equals("0")|| labyrinth[position_x-1][position_y].equals("E")){ // 1 valido
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x - 1;
                     y = position_y;
                     exit_status = new int[]{1,x,y};
                     return exit_status;    
                 }
                 else if(labyrinth[position_x-1][position_y].equals("S")){ // 3 chegou na saida!
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x - 1;
                     y = position_y;
                     exit_status = new int[]{3,x,y};
@@ -129,7 +166,7 @@ public class Labyrinth_Problem {
                 }
             }
         }
-        else if(movement.equals("D")){ // Right
+        else if(movement.equals("D")){
             boolean valid = check_move_validity("D",position_x,position_y);
             if(valid == false){ // 0 bateu
                 exit_status = new int[]{0,x,y};
@@ -137,12 +174,14 @@ public class Labyrinth_Problem {
             }
             else{
                 if(labyrinth[position_x+1][position_y].equals("0")|| labyrinth[position_x+1][position_y].equals("E")){ // 1 valido
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x + 1;
                     y = position_y;
                     exit_status = new int[]{1,x,y};
                     return exit_status;    
                 }
                 else if(labyrinth[position_x+1][position_y].equals("S")){ // 3 chegou na saida!
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x + 1;
                     y = position_y;
                     exit_status = new int[]{3,x,y};
@@ -154,7 +193,7 @@ public class Labyrinth_Problem {
                 }
             }
         }
-        else if(movement.equals("L")){ // Up
+        else if(movement.equals("L")){
             boolean valid = check_move_validity("L",position_x,position_y);
             if(valid == false){ // 0 bateu
                 exit_status = new int[]{0,x,y};
@@ -162,12 +201,14 @@ public class Labyrinth_Problem {
             }
             else{
                 if(labyrinth[position_x][position_y-1].equals("0")|| labyrinth[position_x][position_y-1].equals("E")){ // 1 valido
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x;
                     y = position_y-1;
                     exit_status = new int[]{1,x,y};
                     return exit_status;    
                 }
                 else if(labyrinth[position_x][position_y-1].equals("S")){ // 3 chegou na saida!
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x;
                     y = position_y-1;
                     exit_status = new int[]{3,x,y};
@@ -179,7 +220,7 @@ public class Labyrinth_Problem {
                 }
             }
         }
-        else{ // Down
+        else{
             boolean valid = check_move_validity("R",position_x,position_y);
             if(valid == false){ // 0 bateu
                 exit_status = new int[]{0,x,y};
@@ -187,12 +228,14 @@ public class Labyrinth_Problem {
             }
             else{
                 if(labyrinth[position_x][position_y+1].equals("0")|| labyrinth[position_x][position_y+1].equals("E")){ // 1 valido
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x;
                     y = position_y+1;
                     exit_status = new int[]{1,x,y};
                     return exit_status;    
                 }
                 else if(labyrinth[position_x][position_y+1].equals("S")){ // 3 chegou na saida!
+                    labyrinth[position_x][position_y] = "$";
                     x = position_x;
                     y = position_y+1;
                     exit_status = new int[]{3,x,y};
@@ -242,9 +285,9 @@ public class Labyrinth_Problem {
             }
         }
     }
+    
     // Este metodo tenta identificar movimentos em circulo
-    // TODO: Precisa de melhorias!
-    private boolean detect_circle(String[] path, int moves){
+    private boolean detect_circle(String[] path, int moves, int x, int y){
         if(moves == 0){
             return false;
         }
@@ -260,6 +303,9 @@ public class Labyrinth_Problem {
             }
             else if(path[moves-1].equals("U") && path[moves].equals("D")){
                 return true;    
+            }
+            else if(labyrinth[x][y].equals("$")){
+                return true;
             }
             else{
                 return false;
@@ -282,22 +328,24 @@ public class Labyrinth_Problem {
      * 3. 0 -> Passagem
      * 4. 1 -> Parede
      */
-    public void find_Successor(int T){
+    public void find_Successor(int T) throws FileNotFoundException{
         Random index = new Random();
         String aux = "";
         String[] candidate = new String[dimension*dimension];
-        candidate = initialize_path(candidate); // Mudar para algo melhor
+        candidate = initialize_path(candidate,false);
         int next = evaluate_Path(candidate,"Candidate");
+        print_Labyrinth();
+        reset_Labyrinth();
         int random_dropout = index.nextInt(1000)-T;
         if(best_score < next){
             best_path = candidate;
-            best_score = next;
+            best_score = evaluate_Path(best_path,"Best Path");
             return;
         }
         else if(random_dropout <= 0) {
             System.out.println("RANDOM DROPOUT! ");
             best_path = candidate;
-            best_score = next;
+            best_score = evaluate_Path(best_path,"Best Path");
             return;
         }
         else{
@@ -306,14 +354,14 @@ public class Labyrinth_Problem {
     }
     
     // Metodo que simula o algoritmo de tempera simulada
-    public void simulated_Annealing(){
+    public void simulated_Annealing() throws FileNotFoundException{
         int T = 500;
         for(int t = 1; t < 10000; t++){
             find_Successor(T);
-            print_Labyrinth();
             if(best_score >= (dimension * dimension)){
                 System.out.println("Solucao satisfatoria encontrada: "+best_score);
                 print_Path(best_path);
+                print_Labyrinth();
                 break;
             }    
             else{
@@ -321,6 +369,20 @@ public class Labyrinth_Problem {
             }
             T = T-1;
         }
+    }
+    
+    // Reseta o labirinto
+    private void reset_Labyrinth() throws FileNotFoundException{
+        File file = new File(System.getProperty("user.dir")+"/lab_exemplo1.txt");
+        Scanner in = new Scanner(file);
+        dimension = in.nextInt();
+        labyrinth = new String[dimension][dimension];
+        for(int i = 0; i < dimension; i++){
+            for(int j = 0; j < dimension; j++){
+                labyrinth[i][j] = in.next();
+            }
+        }
+        in.close();
     }
     
     //Metodo para escrever na tela o labirinto atual
