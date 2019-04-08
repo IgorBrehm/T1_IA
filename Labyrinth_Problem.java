@@ -58,7 +58,7 @@ public class Labyrinth_Problem {
      * 2. Penalizar movimentos em 'circulo': Cada comportamento circular detectado penaliza em 10% do total de posicoes do labirinto
      * 3. Chega na saida? Ganha muito score: automaticamente recebe 80% do total de posicoes no score (sem levar em conta bonus e penalidades).
      */
-    private long evaluated_Distribution(String[] path){
+    private long evaluate_Path(String[] path){
         long score = 0;
         long percent = (1/100)*dimension;
         int current_x = 0;
@@ -258,42 +258,48 @@ public class Labyrinth_Problem {
      * 4. 1 -> Parede
      */
     public void find_Successor(double T){
-        return;
-        /*
         Random index = new Random();
-        int j = 0;
+        String aux = "";
         int i = 0;
-        while(i == j){
-            j = index.nextInt(total_tasks);
-            i = index.nextInt(total_tasks);    
+        while(i == 0){
+            i = index.nextInt(4);  
         }
-        int[] candidate = work_hours;
-        int aux = candidate[j];
-        candidate[j] = candidate[i];
+        if(i == 1){
+            aux = "L";
+        }
+        else if(i == 2){
+            aux = "R";
+        }
+        else if(i == 3){
+            aux = "U";
+        }
+        else{
+            aux = "D";
+        }
+        String[] candidate = best_path;
         candidate[i] = aux;
-        int actual = evaluated_Distribution(work_hours);
-        int next = evaluated_Distribution(candidate);
+        long actual = evaluate_Path(best_path);
+        long next = evaluate_Path(candidate);
         double random_dropout = Math.exp(-(next-actual)/T);
         if(actual > next){
-            work_hours = candidate;
+            best_path = candidate;
             return;
         }
         else if(random_dropout > 0) {
-            work_hours = candidate;
+            best_path = candidate;
             return;
         }
         else{
             return;
         }
-        */
     }
     
     // Metodo que simula o algoritmo de tempera simulada
     public void simulated_Annealing(){
-        double T = 300;
+        double T = 500;
         for(int t = 1; t < 10000; t++){  
             find_Successor(T);
-            if(evaluated_Distribution(best_path) >= (dimension * dimension)){
+            if(evaluate_Path(best_path) >= (dimension * dimension)){
                 break;
             }    
             T = T*0.99;
