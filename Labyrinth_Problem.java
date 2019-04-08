@@ -64,10 +64,11 @@ public class Labyrinth_Problem {
             }
         }
         else if(command.equals("cut")){
-            for(int i = 0; i < path.length/2; i++){
+            int aux = (int) Math.floor(trouble_index/2);
+            for(int i = 0; i < aux; i++){
                 path[i] = best_path[i];
             }
-            for(int i = path.length/2; i < path.length; i++){
+            for(int i = aux; i < path.length; i++){
                 j = random.nextInt(4);
                 if(j == 1){ // 1
                     path[i] = "L";
@@ -364,8 +365,9 @@ public class Labyrinth_Problem {
         }
         else if(random_dropout <= 0) {
             System.out.println("RANDOM DROPOUT! ");
-            best_path = initialize_path(best_path,"cut");
+            best_path = candidate;
             best_score = evaluate_Path(best_path,"Best Path");
+            best_path = initialize_path(best_path,"cut");
             return;
         }
         else{
