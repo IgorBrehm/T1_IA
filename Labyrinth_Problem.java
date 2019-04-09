@@ -14,6 +14,7 @@ public class Labyrinth_Problem {
     private String[] best_path;
     private int best_score;
     private int trouble_index;
+    private int stuck_counter;
     
     // Inicializador do objeto
     public Labyrinth_Problem() throws FileNotFoundException{
@@ -21,6 +22,7 @@ public class Labyrinth_Problem {
         Scanner in = new Scanner(file);
         this.dimension = in.nextInt();
         this.trouble_index = 0;
+        this.stuck_counter = 0;
         this.best_path = new String[dimension*dimension];
         this.best_path = initialize_path(best_path,"start");
         this.labyrinth = new String[dimension][dimension];
@@ -337,17 +339,20 @@ public class Labyrinth_Problem {
         reset_Labyrinth();
         int random_dropout = index.nextInt(5000)-T;
         if(best_score > next || next > 0){
+            stuck_counter = 0;
             best_path = candidate;
             best_score = evaluate_Path(best_path,"Best Path");
             return;
         }
-        else if(random_dropout <= 0) {
+        else if(random_dropout <= 0 || stuck_counter > 20) {
+            stuck_counter = 0;
             System.out.println("RANDOM DROPOUT! ");
             best_path = initialize_path(best_path,"start");
             best_score = evaluate_Path(best_path,"Best Path");
             return;
         }
         else{
+            stuck_counter = stuck_counter + 1;
             return;
         }
     }
