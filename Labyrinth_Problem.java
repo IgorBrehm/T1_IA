@@ -254,7 +254,7 @@ public class Labyrinth_Problem {
     // Metodo que verifica a validade do movimento, isto e, se nao vai sair fora do labirinto
     private boolean check_move_validity(String move,int pos_x,int pos_y){
         if(move.equals("U")){ //Up
-            if(pos_x == 0){
+            if(pos_x <= 0){
                 return false;
             }
             else{
@@ -262,7 +262,7 @@ public class Labyrinth_Problem {
             }
         }
         else if(move.equals("D")){ //Down
-            if(pos_x == dimension-1){
+            if(pos_x >= dimension-1){
                 return false;
             }
             else{
@@ -270,7 +270,7 @@ public class Labyrinth_Problem {
             }
         }
         else if(move.equals("L")){ //Left
-            if(pos_y == 0){
+            if(pos_y <= 0){
                 return false;
             }
             else{
@@ -278,7 +278,7 @@ public class Labyrinth_Problem {
             }
         }
         else{ //Right
-            if(pos_y == dimension-1){
+            if(pos_y >= dimension-1){
                 return false;
             }
             else{
@@ -374,14 +374,18 @@ public class Labyrinth_Problem {
             }
             T = T-1;
         }
+        reset_Labyrinth();
+        a_Algorythm();
     }
     
+    // Implementacao do algoritmo A*
     public void a_Algorythm(){
         int aux = 0;
         int x = 0;
         int y = 0;
         int e_x = 0;
         int e_y = 0;
+        // encontra posicao da saida
         for(int i = 0; i < dimension; i++){
             for(int j = 0; j < dimension; j++){
                 if(labyrinth[i][j].equals("S")){
@@ -391,21 +395,21 @@ public class Labyrinth_Problem {
             }
         }
         String[] path = new String[dimension*dimension];
-        String[] data = new String[3];
+        String[] data = new String[4];
+        // inicializa o caminho com valores invalidos
         for(int k = 0; k < path.length; k++){
             path[k] = "F";
         }
         for(int i = 0; i < path.length; i++){
             data = find_Move(x,y,e_x,e_y);
-            data[0] = path[i];
-            data[1] = x;
-            data[2] = y;
-            if(path[i].contains("S")){
-                // tirar o S e sair
+            path[i] = data[0];
+            x = Integer.parseInt(data[1]);
+            y = Integer.parseInt(data[2]);
+            if(path[3].equals("exit")){
                 break;
             }
         }
-        System.out.println("Solucao otima encontrada usando o alritmo A*: ")
+        System.out.println("Solucao otima encontrada usando o alritmo A*: ");
         for(int j = 0; j < path.length-1; j++){
             if(path[j+1].equals("F")){
                 aux = j;
@@ -414,10 +418,13 @@ public class Labyrinth_Problem {
             System.out.println(path[aux]+" -> ");
         }
         System.out.println(path[aux]);
+        print_Labyrinth();
     }
     
+    // Metodo que utiliza a heuristica para encontrar a melhor direcao a se seguir
     private String[] find_Move(int x, int y, int exit_x, int exit_y){
-        String[] result = new String[3];
+        String[] result = new String[4];
+        String exit = "continue";
         int left = -1;
         int right = -1;
         int up = -1;
@@ -425,29 +432,72 @@ public class Labyrinth_Problem {
         // encontrar as opcoes de movimento (quais as posicoes adjacentes que sao 0)
         // verificar as distancias que se ficaria da saida em cada opcao de movimento
         // atualizar os valores para x e y, retornar o movimento feito
-        boolean valid = check_move_validity("L",x,y);
+        boolean valid = check_move_validity("L",x,y-1);
         if(valid == true){
-            if(labyrinth[x][y-1].equals("0") || labyrinth[x][y-1].equals("S")){
+            if(labyrinth[x][y-1].equals("0")){
                 left = distance(exit_x,x,exit_y,y-1);
             }
+            if(labyrinth[x][y-1].equals("S")){
+                left = distance(exit_x,x,exit_y,y-1);
+                exit = "exit";
+            }
         }
-        valid = check_move_validity("R",x,y);
+        valid = check_move_validity("R",x,y+1);
         if(valid == true){
-            // verificar se e 0 ou S
-            right = distance(exit_x,x,exit_y,y+1);
+            if(labyrinth[x][y+1].equals("0")){
+                right = distance(exit_x,x,exit_y,y+1);
+            }
+            if(labyrinth[x][y+1].equals("S")){
+                right = distance(exit_x,x,exit_y,y+1);
+                exit = "exit";
+            }
         }
-        valid = check_move_validity("U",x,y);
+        valid = check_move_validity("U",x-1,y);
         if(valid == true){
-            // verificar se e 0 ou S
-            up = distance(exit_x,x-1,exit_y,y);
+            if(labyrinth[x-1][y].equals("0") || labyrinth[x-1][y].equals("S")){
+                up = distance(exit_x,x-1,exit_y,y);
+            }
+            if(labyrinth[x-1][y].equals("S")){
+                up = distance(exit_x,x-1,exit_y,y);
+                exit = "exit";
+            }
         }
-        valid = check_move_validity("D",x,y);
+        valid = check_move_validity("D",x+1,y);
         if(valid == true){
-            // verificar se e 0 ou S
-            down = distance(exit_x,x+1,exit_y,y);
+            if(labyrinth[x+1][y].equals("0")){
+                down = distance(exit_x,x+1,exit_y,y);
+            }
+            if(labyrinth[x+1][y].equals("S")){
+                down = distance(exit_x,x+1,exit_y,y);
+                exit = "exit";
+            }
         }
-        // pegar o maior
+        // pegar o menor
         // atualizar os valores para x e y, retornar o movimento feito
+        if(left < right && (left < up && (left < down))){
+            result[0] = "L";
+            result[1] = Integer.toString(x);
+            result[2] = Integer.toString(y-1);
+            result[3] = exit;
+        }
+        else if(right < left && (right < up && (right < down))){
+            result[0] = "R";
+            result[1] = Integer.toString(x);
+            result[2] = Integer.toString(y+1);
+            result[3] = exit;
+        }
+        else if(up < left && (up < right && (up < down))){
+            result[0] = "U";
+            result[1] = Integer.toString(x-1);
+            result[2] = Integer.toString(y);
+            result[3] = exit;
+        }
+        else{
+            result[0] = "D";
+            result[1] = Integer.toString(x+1);
+            result[2] = Integer.toString(y);
+            result[3] = exit;
+        }
         return result;
     }
     
@@ -455,18 +505,18 @@ public class Labyrinth_Problem {
     private int distance(int x1, int x2, int y1, int y2){
         if(x1 > x2){
             if(y1 > y2){
-                return (x1 - x2) - (y1 - y2);
+                return (x1 - x2) + (y1 - y2);
             }
             else{
-                return (x1 - x2) - (y2 - y1);
+                return (x1 - x2) + (y2 - y1);
             }
         }
         else{
             if(y1 > y2){
-                return (x2 - x1) - (y1 - y2);
+                return (x2 - x1) + (y1 - y2);
             }
             else{
-                return (x2 - x1) - (y2 - y1);
+                return (x2 - x1) + (y2 - y1);
             }
         }
     }
