@@ -1,8 +1,8 @@
 /**
- * Uma solução para o problema do labirinto usando o algoritmo
+ * Uma solucao para o problema do labirinto usando o algoritmo
  * de tempera simulada. 
  * 
- * @author Igor Sgorla Brehm, Alexandre Bing e Vinicius Parmeggiani
+ * @author Douglas Dallavale, Igor Sgorla Brehm, Joao Lerina, Vinicius Viana
  */
 import java.util.Random;
 import java.util.Scanner;
@@ -13,29 +13,33 @@ public class Labyrinth_Problem {
     private int dimension;
     private String[] best_path;
     private int best_score;
-    private int trouble_index;
-    private int stuck_counter;
+    private int dropout_counter;
+    private int counter;
+    private int iters;
+    private int path_size;
     
     // Inicializador do objeto
     public Labyrinth_Problem() throws FileNotFoundException{
-        File file = new File(System.getProperty("user.dir")+"/lab_exemplo2.txt");
+        File file = new File(System.getProperty("user.dir")+"/lab_exemploSilvia.txt");
         Scanner in = new Scanner(file);
         this.dimension = in.nextInt();
-        this.trouble_index = 0;
-        this.stuck_counter = 0;
-        this.best_path = new String[dimension*dimension];
+        this.dropout_counter = 0;
+        this.counter = 0;
+        this.path_size = (dimension*dimension)/2;
+        this.iters = 500000; // numero de iteracoes do algoritmo de tempera simulada
+        this.best_path = new String[path_size];
         this.best_path = initialize_path(best_path,"start");
         this.labyrinth = new String[dimension][dimension];
-        for(int i = 0; i < dimension; i++){
+        for(int i = 0; i < dimension; i++){ // Inicializa o labirinto
             for(int j = 0; j < dimension; j++){
                 labyrinth[i][j] = in.next();
             }
         }
         in.close();
-        this.best_score = evaluate_Path(best_path,"Best Path");
         System.out.println("Iniciada a execucao do algoritmo...\n");
         System.out.println("Labirinto a ser resolvido:");
         print_Labyrinth();
+        this.best_score = evaluate_Path(best_path);
         simulated_Annealing();
     }
     
@@ -43,41 +47,19 @@ public class Labyrinth_Problem {
     private String[] initialize_path(String[] path, String command){
         Random random = new Random();
         int j = 0;
-        if(command.equals("improve")){ // candidate
-            for(int i = 0; i < trouble_index; i++){
-                path[i] = best_path[i];
+        for(int i = 0; i < path.length; i++){
+            j = random.nextInt(4);
+            if(j == 1){ // 1
+                path[i] = "L";
             }
-            for(int i = trouble_index; i < path.length; i++){
-                j = random.nextInt(4);
-                if(j == 1){ // 1
-                    path[i] = "L";
-                }
-                else if(j == 2){ // 2
-                    path[i] = "R";
-                }
-                else if(j == 3){ // 3
-                    path[i] = "U";
-                }
-                else{ // 4
-                    path[i] = "D";
-                }
+            else if(j == 2){ // 2
+                path[i] = "R";
             }
-        }
-        else{
-            for(int i = 0; i < path.length; i++){
-                j = random.nextInt(4);
-                if(j == 1){ // 1
-                    path[i] = "L";
-                }
-                else if(j == 2){ // 2
-                    path[i] = "R";
-                }
-                else if(j == 3){ // 3
-                    path[i] = "U";
-                }
-                else{ // 4
-                    path[i] = "D";
-                }
+            else if(j == 3){ // 3
+                path[i] = "U";
+            }
+            else{ // 4
+                path[i] = "D";
             }
         }
         return path;
@@ -86,49 +68,41 @@ public class Labyrinth_Problem {
     // Este metodo calcula o quao boa e a sequencia de direcoes sendo avaliada
     /*
      * Score: 
-     * 1. Quantos passos da sem bater em nada: Cada passo aumenta score em 1% do total de posicoes do labirinto
-     * 2. Penalizar movimentos em 'circulo': Cada comportamento circular detectado penaliza em 10% do total de posicoes do labirinto
-     * 3. Chega na saida? Ganha muito score: automaticamente recebe 80% do total de posicoes no score (sem levar em conta bonus e penalidades).
+     * 1. Quantos passos da sem bater em nada: Cada passo ganha 1 ponto.
+     * 2. Penalizar movimentos em 'circulo': Cada comportamento circular detectado penaliza em 4 pontos.
+     * 3. Chega na saida? Ganha muito score: automaticamente recebe muita nota positiva.
      */
-    private int evaluate_Path(String[] path,String name){
+    private int evaluate_Path(String[] path){
         int score = 0;
         int current_x = 0;
         int current_y = 0;
-        print_Path(path,"full");
-        System.out.println("Avaliando "+name);
+        //print_Path(path,"partial");
+        //System.out.println("Avaliando Caminho");
         for(int k = 0; k < path.length; k++){
             int[] feedback = new int[3];
-            System.out.println("Movendo para: "+path[k]);
-            System.out.println("Posicao atual: "+labyrinth[current_x][current_y]+","+current_x+","+current_y);
+            //System.out.println("Movendo para: "+path[k]);
+            //System.out.println("Posicao atual: "+labyrinth[current_x][current_y]+","+current_x+","+current_y);
             feedback = move(path[k], current_x, current_y);
             current_x = feedback[1];
             current_y = feedback[2];
             if(feedback[0] == 0){
-                System.out.println("BATEU! "+trouble_index);
-                if(name.equals("Best Path")){
-                    trouble_index = k;
-                    System.out.println("NEW TROUBLE INDEX: "+trouble_index);
-                }
+                //System.out.println("BATEU! ");
                 break; // 0 bateu na parede
             }
             else if(feedback[0] == 1){
                 if(detect_circle(path,k,current_x,current_y) == true){ // 2 movimento em circulo
                     score = score - 4;
-                    System.out.println("ANDOU EM CIRCULO!");
+                    //System.out.println("ANDOU EM CIRCULO!");
                 }
                 else{ // 1 movimento bom
-                    score = score - 1; 
-                    System.out.println("ANDOU COM SUCESSO!");
+                    score = score + 1; 
+                    //System.out.println("ANDOU COM SUCESSO!");
                 }
             }
             else{ // 3 chegou na saida
-                System.out.println("CHEGOU NA SAIDA!");
-                trouble_index = k;
+                //System.out.println("CHEGOU NA SAIDA!");
+                path[k+1] = "F";
                 score = score + (dimension*dimension*dimension);
-                // *********************************************************************
-                // TODO: agora que chegamos na saida, o score deve funcionar diferente
-                // ja que agora queremos encontrar o menor caminho ate a saida
-                // *********************************************************************
                 break;
             }
         }
@@ -147,7 +121,8 @@ public class Labyrinth_Problem {
                 return exit_status;
             }
             else{
-                if(labyrinth[position_x-1][position_y].equals("0")|| labyrinth[position_x-1][position_y].equals("E")){ // 1 valido
+                if(labyrinth[position_x-1][position_y].equals("0")|| labyrinth[position_x-1][position_y].equals("E")
+                || labyrinth[position_x-1][position_y].equals("$")){ // 1 valido
                     labyrinth[position_x][position_y] = "$";
                     x = position_x - 1;
                     y = position_y;
@@ -174,7 +149,8 @@ public class Labyrinth_Problem {
                 return exit_status;
             }
             else{
-                if(labyrinth[position_x+1][position_y].equals("0")|| labyrinth[position_x+1][position_y].equals("E")){ // 1 valido
+                if(labyrinth[position_x+1][position_y].equals("0")|| labyrinth[position_x+1][position_y].equals("E")
+                || labyrinth[position_x+1][position_y].equals("$")){ // 1 valido
                     labyrinth[position_x][position_y] = "$";
                     x = position_x + 1;
                     y = position_y;
@@ -201,7 +177,8 @@ public class Labyrinth_Problem {
                 return exit_status;
             }
             else{
-                if(labyrinth[position_x][position_y-1].equals("0")|| labyrinth[position_x][position_y-1].equals("E")){ // 1 valido
+                if(labyrinth[position_x][position_y-1].equals("0")|| labyrinth[position_x][position_y-1].equals("E")
+                || labyrinth[position_x][position_y-1].equals("$")){ // 1 valido
                     labyrinth[position_x][position_y] = "$";
                     x = position_x;
                     y = position_y-1;
@@ -228,7 +205,8 @@ public class Labyrinth_Problem {
                 return exit_status;
             }
             else{
-                if(labyrinth[position_x][position_y+1].equals("0")|| labyrinth[position_x][position_y+1].equals("E")){ // 1 valido
+                if(labyrinth[position_x][position_y+1].equals("0")|| labyrinth[position_x][position_y+1].equals("E")
+                || labyrinth[position_x][position_y+1].equals("$")){ // 1 valido
                     labyrinth[position_x][position_y] = "$";
                     x = position_x;
                     y = position_y+1;
@@ -314,8 +292,8 @@ public class Labyrinth_Problem {
         }
     }
     
-    // Este metodo tenta encontrar um estado vizinho (combinacao de direcoes com apenas 2 direcoes de diferenca do estado atual)
-    // que seja melhor que o estado atual.
+    // Este metodo tenta encontrar um estado vizinho (combinacao de direcoes com apenas 2 direcoes de diferenca
+    // do estado atual) que seja melhor que o estado atual.
     /*
      * Direcoes possiveis:
      * 1. L -> Esquerda
@@ -329,58 +307,99 @@ public class Labyrinth_Problem {
      * 3. 0 -> Passagem
      * 4. 1 -> Parede
      */
-    public void find_Successor(int T) throws FileNotFoundException{
-        Random index = new Random();
-        String aux = "";
-        String[] candidate = new String[dimension*dimension];
-        candidate = initialize_path(candidate,"improve");
-        int next = evaluate_Path(candidate,"Candidate");
-        print_Labyrinth();
+    public void find_Successor(double T) throws FileNotFoundException{
+        Random random = new Random();
+        String[] candidate = create_Candidate(4);
+        int candidate_score = evaluate_Path(candidate);
         reset_Labyrinth();
-        int random_dropout = index.nextInt(5000)-T;
-        if(best_score > next || next > 0){
-            stuck_counter = 0;
+        int energy = candidate_score - best_score;
+        if(energy > 0){
             best_path = candidate;
-            best_score = evaluate_Path(best_path,"Best Path");
+            best_score = candidate_score;
             return;
         }
-        else if(random_dropout <= 0 || stuck_counter > 20) {
-            stuck_counter = 0;
-            System.out.println("RANDOM DROPOUT! ");
-            best_path = initialize_path(best_path,"start");
-            best_score = evaluate_Path(best_path,"Best Path");
-            return;
-        }
-        else{
-            stuck_counter = stuck_counter + 1;
+        else {
+            double random_dropout = Math.exp(energy/T);
+            if(random.nextDouble() < random_dropout) {
+                dropout_counter+=1;
+                //System.out.println("RANDOM DROPOUT! ");
+                best_path = candidate;
+                best_score = candidate_score;
+            }
             return;
         }
     }
     
+    // Metodo que cria um candidato
+    private String[] create_Candidate(int num_changes){
+        Random random = new Random();
+        String[] candidate = new String[path_size];
+        for(int i = 0; i < best_path.length; i++){
+            candidate[i] = best_path[i];
+        }
+        for(int k = 0; k < num_changes; k++){
+            int a = random.nextInt(best_path.length);
+            int j = random.nextInt(4);
+            if(j == 1){ // 1
+                candidate[a] = "L";
+            }
+            else if(j == 2){ // 2
+                candidate[a] = "R";
+            }
+            else if(j == 3){ // 3
+                candidate[a] = "U";
+            }
+            else{ // 4
+                candidate[a] = "D";
+            }
+        }
+        return candidate;
+    }
+    
     // Metodo que simula o algoritmo de tempera simulada
     public void simulated_Annealing() throws FileNotFoundException{
-        int T = 5000;
-        for(int t = 1; t < 10000; t++){
+        double T = 100;
+        for(int t = 1; t <= iters; t++){
             find_Successor(T);
-            if(best_score > 0){
-                System.out.println("Solucao satisfatoria encontrada: "+best_score);
+            counter+=1;
+            //System.out.println(counter);
+            //System.out.println(dropout_counter);
+            if(best_score > dimension*dimension*dimension){
+                System.out.println("Solucao satisfatoria encontrada: ");
+                best_score = evaluate_Path(best_path);
                 print_Path(best_path,"partial");
                 print_Labyrinth();
                 break;
-            }    
-            else{
-                System.out.println("SCORE ATUAL: "+best_score);
-                System.out.println("**********************************************************************************");
+            }  
+            else if(T <= 0.0){
+                System.out.println("Temperatura atingiu valor zero");
+                best_score = evaluate_Path(best_path);
+                print_Path(best_path,"partial");
+                print_Labyrinth();
+                break;
             }
-            T = T-1;
+            else if(t == iters){
+                System.out.println("Numero maximo de iteracoes alcancado");
+                best_score = evaluate_Path(best_path);
+                print_Path(best_path,"partial");
+                print_Labyrinth();
+                break;
+            }
+            else{
+                //System.out.println("SCORE ATUAL: "+best_score);
+                //System.out.println("**********************************************************************************\n");
+            }
+            T = T*0.8;
         }
+        System.out.println(counter);
+        System.out.println(dropout_counter);
         reset_Labyrinth();
         a_Algorythm();
     }
     
     // Implementacao do algoritmo A*
     public void a_Algorythm(){
-        System.out.println("**********************************************************************************");
+        System.out.println("\n**********************************************************************************");
         System.out.println("Executando algoritmo A*: ");
         int aux = 0;
         int x = 0;
@@ -396,14 +415,15 @@ public class Labyrinth_Problem {
                 }
             }
         }
-        String[] path = new String[dimension*dimension];
+        String[] path = new String[path_size];
         String[] data = new String[4];
-        // inicializa o caminho com valores invalidos
+        // inicializa o caminho com valores invalidos para ficar mais facil
+        // printar na tela a solucao depois
         for(int k = 0; k < path.length; k++){
             path[k] = "F";
         }
         for(int i = 0; i < path.length; i++){
-            data = find_Move(x,y,e_x,e_y);
+            data = find_Move(x,y,e_x,e_y); // encontra o melhor passo a se tomar neste momento
             path[i] = data[0];
             x = Integer.parseInt(data[1]);
             y = Integer.parseInt(data[2]);
@@ -412,14 +432,7 @@ public class Labyrinth_Problem {
             }
         }
         System.out.println("Solucao otima encontrada usando o algoritmo A*: ");
-        for(int j = 0; j < path.length-1; j++){
-            if(path[j+1].equals("F")){
-                aux = j;
-                break;
-            }
-            System.out.print(path[j]+" -> ");
-        }
-        System.out.println(path[aux]);
+        print_Path(path,"partial");
         print_Labyrinth();
     }
     
@@ -496,9 +509,10 @@ public class Labyrinth_Problem {
                 return result;
             }
         }
-        // pegar o menor
-        // atualizar os valores para x e y, retornar o movimento feito
+        // pega a menor distancia
+        // atualiza os valores para x e y, retorna o movimento feito
         if(left <= right && (left <= up && (left <= down))){
+            // TODO se as distancias sao iguais, temos que criar uma forma de desempate
             result[0] = "L";
             labyrinth[x][y] = "$";
             result[1] = Integer.toString(x);
@@ -506,6 +520,7 @@ public class Labyrinth_Problem {
             result[3] = exit;
         }
         else if(right <= left && (right <= up && (right <= down))){
+            // TODO se as distancias sao iguais, temos que criar uma forma de desempate
             result[0] = "R";
             labyrinth[x][y] = "$";
             result[1] = Integer.toString(x);
@@ -513,6 +528,7 @@ public class Labyrinth_Problem {
             result[3] = exit;
         }
         else if(up <= left && (up <= right && (up <= down))){
+            // TODO se as distancias sao iguais, temos que criar uma forma de desempate
             result[0] = "U";
             labyrinth[x][y] = "$";
             result[1] = Integer.toString(x-1);
@@ -520,6 +536,7 @@ public class Labyrinth_Problem {
             result[3] = exit;
         }
         else{
+            // TODO se as distancias sao iguais, temos que criar uma forma de desempate
             result[0] = "D";
             labyrinth[x][y] = "$";
             result[1] = Integer.toString(x+1);
@@ -554,7 +571,7 @@ public class Labyrinth_Problem {
     
     // Reseta o labirinto
     private void reset_Labyrinth() throws FileNotFoundException{
-        File file = new File(System.getProperty("user.dir")+"/lab_exemplo2.txt");
+        File file = new File(System.getProperty("user.dir")+"/lab_exemploSilvia.txt");
         Scanner in = new Scanner(file);
         dimension = in.nextInt();
         labyrinth = new String[dimension][dimension];
@@ -603,11 +620,15 @@ public class Labyrinth_Problem {
             System.out.println("\n");
         }
         else{
-            for(int i = 0; i < trouble_index; i++){
-            System.out.print(path[i]+" -> ");    
+            int aux = 0;
+            for(int j = 0; j < path.length-1; j++){
+                if(path[j+1].equals("F")){
+                    aux = j;
+                    break;
+                }
+                System.out.print(path[j]+" -> ");
             }
-            System.out.print(path[trouble_index]);
-            System.out.println("\n");
+            System.out.println(path[aux]);
         }
     }
     
