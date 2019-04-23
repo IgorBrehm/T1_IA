@@ -21,10 +21,12 @@ public class Labyrinth_Problem {
     private int path_size;
     private int counter;
     private int dropout;
+    private String filename;
     
     // Inicializador do objeto
-    public Labyrinth_Problem() throws FileNotFoundException{
-        File file = new File(System.getProperty("user.dir")+"/lab_exemploSilvia.txt");
+    public Labyrinth_Problem(String name) throws FileNotFoundException{
+        this.filename = name;
+        File file = new File(filename);
         Scanner in = new Scanner(file);
         this.dimension = in.nextInt();
         this.counter = 0;
@@ -571,7 +573,7 @@ public class Labyrinth_Problem {
     
     // Reseta o labirinto
     private void reset_Labyrinth() throws FileNotFoundException{
-        File file = new File(System.getProperty("user.dir")+"/lab_exemploSilvia.txt");
+        File file = new File(filename);
         Scanner in = new Scanner(file);
         dimension = in.nextInt();
         labyrinth = new String[dimension][dimension];
@@ -634,6 +636,6 @@ public class Labyrinth_Problem {
     
     // Metodo Main da solucao
     public static void main(String args[]) throws FileNotFoundException{
-       Labyrinth_Problem problem = new Labyrinth_Problem();
+       Labyrinth_Problem problem = new Labyrinth_Problem(args[0]);
     }
 }
