@@ -19,12 +19,16 @@ public class Labyrinth_Problem {
     private int exit_index_Y;
     private int iters;
     private int path_size;
+    private int counter;
+    private int dropout;
     
     // Inicializador do objeto
     public Labyrinth_Problem() throws FileNotFoundException{
         File file = new File(System.getProperty("user.dir")+"/lab_exemploSilvia.txt");
         Scanner in = new Scanner(file);
         this.dimension = in.nextInt();
+        this.counter = 0;
+        this.dropout = 0;
         this.path_size = dimension*dimension;
         this.iters = 500000; // numero de iteracoes do algoritmo de tempera simulada
         this.best_path = new String[path_size];
@@ -336,6 +340,7 @@ public class Labyrinth_Problem {
             double random_dropout = Math.exp(energy/T);
             if(random.nextDouble() < random_dropout) {
                 //System.out.println("RANDOM DROPOUT! ");
+                dropout+=1;
                 best_path = candidate;
                 best_score = candidate_score;
             }
@@ -372,6 +377,7 @@ public class Labyrinth_Problem {
     public void simulated_Annealing() throws FileNotFoundException{
         double T = 100;
         for(int t = 1; t <= iters; t++){
+            counter+=1;
             find_Successor(T);
             if(best_score > dimension*dimension*dimension){
                 System.out.println("Solucao satisfatoria encontrada: ");
@@ -400,6 +406,8 @@ public class Labyrinth_Problem {
             }
             T = T*0.8;
         }
+        System.out.println("Iteracoes: "+counter);
+        System.out.println("Dropouts: "+dropout);
         reset_Labyrinth();
         a_Algorythm();
     }
