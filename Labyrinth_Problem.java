@@ -410,8 +410,8 @@ public class Labyrinth_Problem {
         }
         System.out.println("Iteracoes: "+counter);
         System.out.println("Dropouts: "+dropout);
-        reset_Labyrinth();
-        a_Algorythm();
+        //reset_Labyrinth();
+        //a_Algorythm();
     }
     
     // Implementacao do algoritmo A*
